@@ -1,0 +1,31 @@
+{% extends "layout_user.html" %}
+
+{% block title %}
+    chat
+{% endblock %}
+
+{% block main %}
+<h3 style="font-size: 30px; color: #333; margin-top: 10px; margin-bottom: 20px;">{{ group_name }}</h3>
+<div class="container">
+{% for row in messages %}
+{% if row['user_id'] == user %}
+  <div class="container">
+    <img src="{{ row['img ']}}" alt="Avatar">
+    <p>{{ row['message'] }}</p>
+    <span class="time-right">{{ row['datetime']}}</span>
+  </div>
+{% else %}
+  <div class="container">
+    <img src="{{ row['img ']}}" alt="Avatar" class="right">
+    <p>{{ row['message'] }}</p>
+    <span class="time-right">{{ row['datetime']}}</span>
+  </div>
+{% endif %}
+{% endfor%}
+</div>
+<form class="input-container" method="post" action="/chat">
+    <input type="hidden" name="group_id" value="{{ group_id }}">
+    <input type="text" class="message-input" name="message" placeholder="Enter your message...">
+    <button type="submit" class="block" style="margin-top: 10px;">Send</button>
+</form>
+{% endblock %}

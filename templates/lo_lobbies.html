@@ -1,0 +1,146 @@
+{% extends "layout_user.html" %}
+
+{% block title %}
+    lo lobbies
+{% endblock %}
+
+{% block styles %}
+
+{% endblock %}
+
+{% block main %}
+{% if data%}
+<table class="table table-striped mobile-table">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Sport</th>
+            <th scope="col">Location</th>
+            <th scole="col">Join request</th>
+        </tr>
+    </thead>
+    {% for row in data %}
+    <tr style="font-weight: bold; ">
+        <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
+        <td class="text-nowrap" style="color: #1E90FF;">{{ row["sport"] }}</td>
+        <td class="text-nowrap" style="color: #1E90FF;" id="location{{ loop.index }}"></td>
+        <td onclick="window.location.href='/join_request?group_id={{ row['id'] }}';"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-envelope-plus" viewBox="0 0 16 16">
+          <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l7-4.2V8.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2H2Zm3.708 6.208L1 11.105V5.383l4.708 2.825ZM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2-7-4.2Z"/>
+          <path d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm-3.5-2a.5.5 0 0 0-.5.5v1h-1a.5.5 0 0 0 0 1h1v1a.5.5 0 0 0 1 0v-1h1a.5.5 0 0 0 0-1h-1v-1a.5.5 0 0 0-.5-.5Z"/>
+        </svg></td>
+    </tr>
+    <tr>
+        <td class="text-nowrap">{{ row["time"] }}</td>
+        <td class="text-nowrap">{{ row["language"] }}</td>
+        <td class="text-nowrap">{{ row["user_count"] }}</td>
+      	<td></td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+{% endif %}
+{% for row in data%}
+<script>
+function navigateToURL(url) {
+    window.location.href = url;
+  }
+
+  function reverseGeocode(latitude, longitude, elementId) {
+  var geocoder = new google.maps.Geocoder();
+  var latlng = new google.maps.LatLng(latitude, longitude);
+
+  geocoder.geocode({ 'latLng': latlng }, function(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+      if (results[0]) {
+        var addressComponents = results[0].address_components;
+        var town = '';
+
+        // Loop through the address components to find the town (city)
+        for (var i = 0; i < addressComponents.length; i++) {
+          var component = addressComponents[i];
+          if (component.types.includes('locality')) {
+            town = component.long_name;
+            break;
+          }
+        }
+
+        document.getElementById(elementId).innerHTML = town;
+      } else {
+        document.getElementById(elementId).innerHTML = 'No results found';
+      }
+    } else {
+      document.getElementById(elementId).innerHTML = 'Geocoder failed due to: ' + status;
+    }
+  });
+}
+
+
+  var latitude{{ loop.index }} = {{ row['location_lati'] }};
+  var longitude{{ loop.index }} = {{ row['location_long'] }};
+  var elementId{{ loop.index }} = 'location{{ loop.index }}';
+  reverseGeocode(latitude{{ loop.index }}, longitude{{ loop.index }}, elementId{{ loop.index }});
+</script>
+{% endfor %}
+<style>
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .table th, .table td {
+        padding: 8px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .table th {
+        background-color: #f2f2f2;
+    }
+
+    .table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .table tr:hover {
+        background-color: #1E90FF;
+    }
+
+    @media (max-width: 576px) {
+        .mobile-table {
+          font-size: 15px; /* Adjust the font size as needed */
+          text-align: center;
+        }
+        .mobile-table td,
+        .mobile-table th {
+          font-size: 11px; /* Adjust the font size for table cells as needed */
+          text-align: center;
+          padding: 5px 5px;
+        }
+        .mobile-image {
+          max-width: 30%; /* Set the maximum width of the image to fit within its container */
+          height: auto; /* Allow the height to adjust automatically based on the aspect ratio */
+        }
+        .mobile-button {
+          font-size: 5px; /* Adjust the font size to make the button smaller */
+          padding: 1px 5px; /* Adjust the padding to reduce the button size */
+        }
+
+        .mobile-select {
+          font-size: 5px; /* Adjust the font size to make the select element smaller */
+          padding: 2px; /* Adjust the padding to reduce the select element size */
+        }
+        .table-container {
+          max-height: 300px; /* Adjust the maximum height as needed */
+          overflow: auto;
+        }
+        .table thead th {
+          padding: 2px; /* Adjust the padding as needed */
+        }
+
+        .table tbody td {
+          padding: px; /* Adjust the padding as needed */
+        }
+      }
+  </style>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "layout_user.html" %}
+
+{% block title %}
+    Lobies
+{% endblock %}
+
+{% block style %}
+
+{% endblock %}
+
+{% block main %}
+{% if groups %}
+<div style="margin-top: 10;">
+  <h3 style="font-size: 30px; color: #333; margin-bottom: 20px; margin-top: 10px;">My Lobbies</h3>
+</div>
+<table class="table table-striped mobile-table" style="margin-top: 10px;">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Sport</th>
+      <th scope="col">Location</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in groups %}
+    <tr onclick="navigateToURL('/lobby?group_id={{ row['group_id'] }}&group_name={{ row['name'] }}')" style="cursor: pointer; font-weight: bold;">
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["sport"] }}</td>
+      <td class="text-nowrap" style="color: #1E90FF;" id="location{{ loop.index }}"></td>
+     </tr>
+     <tr>
+      <td class="text-nowrap">{{ row["user_count"]}}</td>
+      <td class="text-nowrap">{{ row["language"]}}</td>
+      <td class="text-nowrap">{{ row["time"] }}</td>
+    </tr>
+    {% if sent_requests%}
+    {% for row in sent_requests %}
+    <tr onclick="navigateToURL('/profile?user_id={{ row['id'] }}')" style="cursor: pointer; font-weight: bold;">
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
+      <td class="text-nowrap">Wonts to join Your group</td>
+      <td class="text-nowrap">{{ row["group_name"] }}</td>
+     </tr>
+     <tr>
+      <td class="text-nowrap"></td>
+      <td onclick="window.location.href='/join_request?user_id={{ row['id'] }}&group_id={{ row['group_id']}}';">ADD <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="#1E90FF" class="bi bi-check-circle" viewBox="0 0 16 18">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+      </svg></td> </td>
+      <td onclick="window.location.href='/delete_request?user_id={{ row['id'] }}&group_id={{ row['group_id']}}';">DELETE <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-x-circle" viewBox="0 0 16 18">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+      </svg></td>
+    </tr>
+    {% endfor %}
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-success" style="margin-top: 10">No groups!</div>
+{% endif %}
+{% if requests %}
+<div style="margin-top: 10;">
+  <h3 style="font-size: 30px; color: #333; margin-bottom: 20px; margin-top: 10px;">Requests</h3>
+</div>
+<table class="table table-striped mobile-table" style="margin-top: 10px;">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Sport</th>
+      <th scope="col">Users</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in requests %}
+    <tr style="font-weight: bold; ">
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["sport"] }}</td>
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["user_count"]}}</td>
+      <td onclick="window.location.href='/join_request?group_id={{ row['group_id'] }}';"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="#1E90FF" class="bi bi-check-circle" viewBox="0 0 16 18">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+      </svg></td>
+    </tr>
+    <tr>
+      <td class="text-nowrap" id="locationr{{ loop.index }}"></td>
+      <td class="text-nowrap">{{ row["language"]}}</td>
+      <td class="text-nowrap">{{ row["time"] }}</td>
+      <td onclick="window.location.href='/delete_request?group_id={{ row['group_id'] }}';"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-x-circle" viewBox="0 0 16 18">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+      </svg></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-success">No requests!</div>
+{% endif %}
+{% for row in groups %}
+<script>
+  function navigateToURL(url) {
+    window.location.href = url;
+  }
+
+  function reverseGeocode(latitude, longitude, elementId) {
+  var geocoder = new google.maps.Geocoder();
+  var latlng = new google.maps.LatLng(latitude, longitude);
+
+  geocoder.geocode({ 'latLng': latlng }, function(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+      if (results[0]) {
+        var addressComponents = results[0].address_components;
+        var town = '';
+
+        // Loop through the address components to find the town (city)
+        for (var i = 0; i < addressComponents.length; i++) {
+          var component = addressComponents[i];
+          if (component.types.includes('locality')) {
+            town = component.long_name;
+            break;
+          }
+        }
+
+        document.getElementById(elementId).innerHTML = town;
+      } else {
+        document.getElementById(elementId).innerHTML = 'No results found';
+      }
+    } else {
+      document.getElementById(elementId).innerHTML = 'Geocoder failed due to: ' + status;
+    }
+  });
+}
+
+
+  var latitude{{ loop.index }} = {{ row['location_lati'] }};
+  var longitude{{ loop.index }} = {{ row['location_long'] }};
+  var elementId{{ loop.index }} = 'location{{ loop.index }}';
+  reverseGeocode(latitude{{ loop.index }}, longitude{{ loop.index }}, elementId{{ loop.index }});
+
+</script>
+{% endfor %}
+{% for row in requests %}
+<script>
+  function navigateToURL(url) {
+    window.location.href = url;
+  }
+
+  function reverseGeocode(latitude, longitude, elementId) {
+  var geocoder = new google.maps.Geocoder();
+  var latlng = new google.maps.LatLng(latitude, longitude);
+
+  geocoder.geocode({ 'latLng': latlng }, function(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+      if (results[0]) {
+        var addressComponents = results[0].address_components;
+        var town = '';
+
+        // Loop through the address components to find the town (city)
+        for (var i = 0; i < addressComponents.length; i++) {
+          var component = addressComponents[i];
+          if (component.types.includes('locality')) {
+            town = component.long_name;
+            break;
+          }
+        }
+
+        document.getElementById(elementId).innerHTML = town;
+      } else {
+        document.getElementById(elementId).innerHTML = 'No results found';
+      }
+    } else {
+      document.getElementById(elementId).innerHTML = 'Geocoder failed due to: ' + status;
+    }
+  });
+}
+
+
+  var latitude{{ loop.index }} = {{ row['location_lati'] }};
+  var longitude{{ loop.index }} = {{ row['location_long'] }};
+  var elementId{{ loop.index }} = 'locationr{{ loop.index }}';
+  reverseGeocode(latitude{{ loop.index }}, longitude{{ loop.index }}, elementId{{ loop.index }});
+</script>
+{% endfor %}
+<style>
+
+  .table {
+      width: 100%;
+      border-collapse: collapse;
+  }
+
+  .table th, .table td {
+      padding: 8px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+  }
+
+  .table th {
+      background-color: #f2f2f2;
+  }
+
+  .table tr:nth-child(even) {
+      background-color: #f9f9f9;
+  }
+
+  .table tr:hover {
+      background-color: #1E90FF;
+  }
+
+  @media (max-width: 576px) {
+      .mobile-table {
+        font-size: 15px; /* Adjust the font size as needed */
+        text-align: center;
+      }
+      .mobile-table td,
+      .mobile-table th {
+        font-size: 12px; /* Adjust the font size for table cells as needed */
+        text-align: center;
+        padding: 5px 5px;
+      }
+      .mobile-image {
+        max-width: 30%; /* Set the maximum width of the image to fit within its container */
+        height: auto; /* Allow the height to adjust automatically based on the aspect ratio */
+      }
+      .mobile-button {
+        font-size: 5px; /* Adjust the font size to make the button smaller */
+        padding: 1px 5px; /* Adjust the padding to reduce the button size */
+      }
+
+      .mobile-select {
+        font-size: 5px; /* Adjust the font size to make the select element smaller */
+        padding: 2px; /* Adjust the padding to reduce the select element size */
+      }
+      .table-container {
+        max-height: 300px; /* Adjust the maximum height as needed */
+        overflow: auto;
+      }
+      .table thead th {
+        padding: 2px; /* Adjust the padding as needed */
+      }
+
+      .table tbody td {
+        padding: px; /* Adjust the padding as needed */
+      }
+    }
+</style>
+{% endblock %}

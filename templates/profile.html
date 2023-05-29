@@ -1,0 +1,56 @@
+{% extends "layout_user.html" %}
+
+{% block title %}
+    PROFILE
+{% endblock %}
+
+{% block main %}
+{% for row in data %}
+    <img src="{{ row['filepath'] }}" class="rounded-square" style="margin-top: 10px;">
+    <h3 style="margin-top: 20px;">{{row['name']}} {{row['surname']}}</h3>
+    <h3>{{row["state"]}} {{row["city"]}}</h3>
+
+    <table style="margin: 0 auto;">
+    <tr>
+        <td>
+            SKILL
+            {% for i in range(1, 6) %}
+                {% if row["skill"] >= i %}
+                    <span class="fa fa-star checked"></span>
+                {% else %}
+                    <span class="fa fa-star"></span>
+                {% endif%}
+            {% endfor%}
+
+        </td>
+    </tr>
+    <tr>
+        <td>
+            FAIRPLAY
+            {% for i in range(1, 6) %}
+                {% if row["fairplay"] >= i %}
+                    <span class="fa fa-star checked"></span>
+                {% else %}
+                    <span class="fa fa-star"></span>
+                {% endif%}
+            {% endfor%}
+
+        </td>
+    </tr>
+    <tr>
+        <td>
+            FRIENDLINESS
+            {% for i in range(1, 6) %}
+                {% if row["friendliness"] >= i %}
+                    <span class="fa fa-star checked"></span>
+                {% else %}
+                    <span class="fa fa-star"></span>
+                {% endif%}
+            {% endfor%}
+
+        </td>
+    </tr>
+    </table>
+{% endfor %}
+<button type="button" class="block" onclick="window.location.href='/edit_profile'" style="font-weight: bold;">EDIT PROFILE</button>
+{% endblock %}

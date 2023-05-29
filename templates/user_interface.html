@@ -1,0 +1,13 @@
+{% extends "layout_user.html" %}
+
+{% block title %}
+    INVOLVE
+{% endblock %}
+
+{% block main %}
+<h1>Welcome {{ name }}</h1>
+<img src="{{ img }}" class="rounded-square">
+<button type="button" class="block" onclick="window.location.href='./create_group'" style="font-weight: bold;">CREATE LOBBY</button>
+<button type="button" class="block" onclick="window.location.href='./lo_lobbies'" style="font-weight: bold;">JOIN LOBBY</button>
+
+{% endblock %}

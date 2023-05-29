@@ -1,0 +1,175 @@
+{% extends "layout_user.html" %}
+
+{% block title %}
+    group settings
+{% endblock %}
+
+{% block main %}
+<h1 style="margin-bottom: 10px;">Settings</h1>
+
+<form action="{{ url_for('settings_group', group_id=group_id, group_name=group_name) }}" method="post">
+
+    <div class="search-container">
+        <input type="text" class="form-control input-sm" name="query" id="searchInput" onkeyup="searchUsers()" placeholder="Search for users.. Enter name/surname.." >
+        <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <div class="selected-users-container">
+        <h2>Selected Users:</h2>
+        <ul id="selectedUsers"></ul>
+    </div>
+
+    <input type="hidden" id="selectedUsersInput" name="selected_users" value="">
+
+    <h2 style="margin-top: 20px;">Change location</h2>
+    <div id="map" style="height: 400px; width: 400px; margin: 0 auto;"></div>
+
+    <div style="margin-top: 5px;">
+      <input  id="latitude" name="latitude" required>
+      <input  id="longitude" name="longitude" required>
+    </div>
+    <button type="submit" class="btn btn-primary" style="font-weight: bold;">Save changes</button>
+</form>
+<form id="deleteForm" action="/delete_group" method="POST" style="margin-top: 10px; margin-bottom: 70px;">
+    <input type="hidden" name="group_id" value="{{ group_id }}">
+    <button type="submit" class="btn" style="font-weight: bold; background-color: red;">DELETE LOBBY</button>
+</form>
+<script>
+        // Initialize the map
+        function initMap() {
+          // Set the map options
+          var mapOptions = {
+            center: { lat: 37.09024, lng: -95.712891 }, // Set initial map center
+            zoom: 10 // Set initial zoom level
+          };
+
+          // Create the map instance
+          var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+          // Create a marker variable to store the user-selected location
+          var marker;
+
+          // Add a click event listener to the map
+          google.maps.event.addListener(map, "click", function(event) {
+            // Check if a marker already exists
+            if (marker) {
+              // If a marker exists, remove it from the map
+              marker.setMap(null);
+            }
+
+            // Create a new marker at the clicked location
+            marker = new google.maps.Marker({
+              position: event.latLng,
+              map: map
+            });
+
+            // Store the selected location's latitude and longitude
+            var latitude = event.latLng.lat();
+            var longitude = event.latLng.lng();
+
+            // Use the latitude and longitude as desired (e.g., store in a form field, send to the server)
+            console.log("Latitude: " + latitude);
+            console.log("Longitude: " + longitude);
+
+            // Store the latitude and longitude in hidden input fields
+            document.getElementById("latitude").value = latitude;
+            document.getElementById("longitude").value = longitude;
+          });
+        }
+
+        // Call the initMap function when the page has finished loading
+        google.maps.event.addDomListener(window, "load", initMap);
+
+
+        function searchUsers() {
+        var input = document.getElementById("searchInput");
+        var resultsContainer = document.getElementById("searchResults");
+
+        // Create a FormData object to send the form data to the server
+        var formData = new FormData();
+        formData.append("query", input.value);
+        formData.append("group_id", group_id);
+
+        // Send an asynchronous request to the server to fetch search results
+        fetch("/search", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Clear the previous search results
+            resultsContainer.innerHTML = "";
+
+            // Loop through the received data and create list items
+            data.forEach(user => {
+                var listItem = document.createElement("li");
+                listItem.textContent = user[1] + " " + user[2] + " " + user[3] + " " + user[4] + " ";
+
+                 // Create an image element
+                var image = document.createElement("img");
+                image.src = user[8]; // Assuming user[8] contains the path to the image
+                image.alt = "User Image";
+                image.classList.add("rounded-square-lobby");
+                listItem.appendChild(image);
+
+                listItem.addEventListener("click", function() {
+                input.value = user[1] + " " + user[2];
+                resultsContainer.innerHTML = "";
+
+                // Add the selected username to the selected users list
+                var selectedUsersList = document.getElementById("selectedUsers");
+                var selectedUserItem = document.createElement("li");
+                selectedUserItem.textContent = user[1] + "  " + user[2] + "  " + user[3] + "  " + user[4] + "|  SKILL : " + user[5] + "|  FAIRPLAY : " + user[6] + "|  FRIENDLINESS : " + user[7];
+                selectedUsersList.appendChild(selectedUserItem);
+
+                // Add the selected user ID to the hidden input field
+                var selectedUsersInput = document.getElementById("selectedUsersInput");
+                if (selectedUsersInput.value === "") {
+                  selectedUsersInput.value = user[0];
+                } else {
+                  selectedUsersInput.value += "," + user[0];
+                }
+
+                input.value = "";
+                });
+
+                resultsContainer.appendChild(listItem);
+            });
+
+        })
+
+        .catch(error => {
+            console.error("Error fetching search results:", error);
+        });
+}
+
+// Add blur event listener to the search input
+input.addEventListener("blur", function () {
+  // Check if the blur event is triggered by clicking outside the search input and results container
+  setTimeout(function () {
+    if (!input.contains(document.activeElement) && !resultsContainer.contains(document.activeElement)) {
+      resultsContainer.innerHTML = "";
+    }
+  }, 100);
+});
+
+// Add click event listener to the document to handle clicks outside the search input and results container
+document.addEventListener("click", function (event) {
+  if (!input.contains(event.target) && !resultsContainer.contains(event.target)) {
+    resultsContainer.innerHTML = "";
+    input.value = "";
+  }
+});
+
+var startTime = document.getElementById('startTime').value;
+var endTime = document.getElementById('endTime').value;
+
+// Combine the start time and end time
+var timeRange = startTime + ' - ' + endTime;
+
+// Output the combined time range
+console.log(timeRange);
+</script>
+
+
+{% endblock %}
