@@ -10,13 +10,13 @@
 {% for row in messages %}
 {% if row['user_id'] == user %}
   <div class="container">
-    <img src="{{ row['img ']}}" alt="Avatar">
+    <img src="{{ row['img']}}" alt="Avatar">
     <p>{{ row['message'] }}</p>
     <span class="time-right">{{ row['datetime']}}</span>
   </div>
 {% else %}
   <div class="container">
-    <img src="{{ row['img ']}}" alt="Avatar" class="right">
+    <img src="{{ row['img']}}" alt="Avatar" class="rounded-square">
     <p>{{ row['message'] }}</p>
     <span class="time-right">{{ row['datetime']}}</span>
   </div>

@@ -1,13 +1,13 @@
 import os
 import uuid
 import sqlite3
-from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, jsonify
-from flask_session import Session
-from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import login_required, create_csv, write_to_csv, delete_csv, format_sql_time
-import csv
 from datetime import datetime
+from cs50 import SQL
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for
+from flask_session import Session
+from helpers import login_required, user_name
+
 
 # Configure application
 app = Flask(__name__, static_url_path='/static')
@@ -19,7 +19,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///database.db")
+db = SQL("sqlite:///DATABASE/database.db")
 
 if __name__ == '__main__':
     app.run(host='192.168.75.105')
@@ -41,24 +41,16 @@ def register():
         password = request.form.get("psw")
         confirmation = request.form.get("psw-repeat")
 
-        if not username:
-            flash("Username required!")
-
-        if not password:
-            flash("Password required!")
-
-        if not confirmation:
-            flash("Please repeat password!")
-
         if password != confirmation:
             flash("PASSWORD != CONFIRMATION PASSWORD")
 
-        hash = generate_password_hash(password)
+        my_hash = generate_password_hash(password)
 
         try:
-            new_user = db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", username, hash)
-        except:
-            return apology("Username already exists!")
+            new_user = db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", (username, my_hash))
+        except sqlite3.Error as e:
+            print("Error occurred while inserting user:", e)
+            return False
 
         session["user_id"] = new_user
 
@@ -107,14 +99,13 @@ def login():
 @login_required
 def user_interface():
     # first page that user sees if not alredy loged in
-    user = session.get("user_id")
+    user_id = session.get("user_id")
 
-    # get username
-    username = db.execute('SELECT username FROM users WHERE id = ?', user)
-    name = username[0]["username"].capitalize()
+    # get name
+    name = user_name(user_id, db)
 
     # get user img
-    img_path = db.execute('SELECT filepath FROM images WHERE user_id = ?', user)
+    img_path = db.execute('SELECT filepath FROM images WHERE user_id = ?', user_id)
     img = img_path[0]["filepath"]
 
     return render_template("user_interface.html", name=name, img=img)
@@ -162,9 +153,8 @@ def create_group():
         user_ids = [] # empty tuple for users ids that we wont to send request to
 
         file = "my_file" # creating csv file for chat and unique code
-        filename, ext = os.path.splitext(file)
+        ext = os.path.splitext(file)
         unique_filename = f"{uuid.uuid4().hex}{ext}"
-        create_csv(unique_filename)
 
         for user_id in selected_user_ids: # puting users ids in empty tuple
             user_ids.append(user_id)
@@ -186,8 +176,9 @@ def create_group():
 
     else:
         user_id = session.get("user_id")
-        return render_template("create_group.html", user_id=user_id)
-
+        name = user_name(user_id, db)  
+        return render_template("create_group.html", user_id=user_id, name=name)
+        
 @app.route("/edit_profile", methods=["GET", "POST"])
 @login_required
 def edit_profile():
@@ -299,8 +290,8 @@ def lobbies():
     join_requests = db.execute("SELECT groups.*, user_counts.user_count FROM groups JOIN user_groups ON groups.group_id = user_groups.group_id JOIN (SELECT user_groups.group_id, SUM(CASE WHEN user_groups.status = 1 THEN 1 ELSE 0 END) || '/' || groups.size AS user_count FROM user_groups JOIN groups ON user_groups.group_id = groups.group_id WHERE user_groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = ?) GROUP BY user_groups.group_id) AS user_counts ON groups.group_id = user_counts.group_id WHERE user_groups.user_id = ? AND user_groups.status = 0", user, user )
     sent_requests = db.execute("SELECT users_info.id, users_info.name || ' ' || users_info.surname AS name, users_info.city, users_info.lang1, user_groups.group_id, user_groups.status, groups.name AS group_name, user_groups.send FROM users_info JOIN user_groups ON users_info.id = user_groups.user_id JOIN groups ON user_groups.group_id = groups.group_id WHERE user_groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = ? AND creator = 1) AND user_groups.send = 2 AND user_groups.status = 0", user)
     groups_names = db.execute("SELECT groups.* , SUM(CASE WHEN user_groups.status = 1 THEN 1 ELSE 0 END) || '/' || groups.size AS user_count, groups.start_time || 'h - ' || groups.end_time || 'h ' || groups.date AS time FROM groups JOIN user_groups ON groups.group_id = user_groups.group_id  WHERE groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = ? AND status = 1) GROUP BY groups.group_id;", user)
-
-    return render_template('lobbies.html', groups=groups_names, requests=join_requests, sent_requests=sent_requests)
+    name = user_name(user, db)
+    return render_template('lobbies.html', groups=groups_names, requests=join_requests, sent_requests=sent_requests, name=name)
 
 @app.route("/lobby", methods=["GET", "POST"])
 @login_required
@@ -316,10 +307,12 @@ def lobby():
     date_value = group_time[0]['date']
     end_time_value = group_time[0]['end_time']
     # Combine the date and end_time into a single datetime object
-    group_datetime = datetime.strptime(f"{date_value} {end_time_value}", "%Y-%m-%d %H:%M")
+    group_datetime = datetime.strptime(f"{date_value} {end_time_value}", "%d.%m.%y %H:%M")
     current_datetime = datetime.now()
+    formatted_datetime = datetime.strptime(current_datetime.strftime("%d.%m.%y %H:%M"), "%d.%m.%y %H:%M")
+
     time = False
-    if group_datetime < current_datetime:
+    if group_datetime < formatted_datetime:
         time = True
 
     return render_template('lobby.html', group_name=group_name, users=users_info, user=user, votes=votes, group_id=group_id, group_info=group_info, time_check=time)
@@ -361,7 +354,6 @@ def delete_group():
     print(csv_file)
 
     if any(user_row['user_id'] == user for user_row in users_groups):
-        delete_csv(csv_file)
         db.execute("DELETE FROM votes WHERE group_id = ?", group_id)
         db.execute("DELETE FROM user_groups WHERE group_id = ?", group_id)
         db.execute("DELETE FROM groups WHERE group_id = ?", group_id)

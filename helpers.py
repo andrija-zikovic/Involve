@@ -43,22 +43,10 @@ def delete_csv(csv_filename):
         print(f"The file {csv_filename} does not exist.")
 # delete_csv("my_data")
 
-def format_sql_time(group_time):
-
-    date_value = group_time[0]['date']
-    time_value = group_time[0]['end_time']
-    date_datetime = datetime.strptime(date_value, "%Y-%m-%d")
-    end_time_datetime = datetime.strptime(time_value, "%H:%M:%S")
-
-    # Format the datetime objects to match the desired format
-    formatted_date = date_datetime.strftime("%Y-%m-%d")
-    formatted_end_time = end_time_datetime.strftime("%H:%M")
-
-    # Concatenate the formatted date and end_time
-    formatted_datetime = f"{formatted_date} / {formatted_end_time}"
-
-    return(formated_datetime)
-
-# SELECT users_info.id, users_info.name, users_info.surname, users_info.city, users_info.lang1, user_groups.group_id, user_groups.status, groups.name
-# FROM users_info JOIN user_groups ON users_info.id = user_groups.user_id JOIN groups ON user_groups.group_id = groups.group_id
-# WHERE user_groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = 1 AND creator = 1)
+def user_name(user_id, db):
+    user_data = db.execute("SELECT name, surname FROM users_info WHERE id = ?", user_id)
+    if user_data:
+        name = user_data[0]["name"] + " " + user_data[0]["surname"]
+        return(name)
+    else:
+        return "User data not found."
