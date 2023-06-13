@@ -5,10 +5,30 @@
 {% endblock %}
 
 {% block main %}
-<h1>Welcome</h1>
-<img src="{{ img }}" class="rounded-square">
+<div class="container">
+    <h2>Welcome to our Sports Matching Website</h2>
+  <p>Find your perfect sports match!</p>
+  
+  <p>To get started, simply use the menu button located in the top right corner. From there, you can:</p>
+  <ul>
+    <li>Create a new group for a specific sport, location, and time</li>
+    <li>Join existing groups based on your preferences</li>
+    <li>Check and manage your profile</li>
+  </ul>
+  
+  <p>Our website works by allowing you to create or join groups based on your location and sports preferences. When creating a group, you can choose the sport, location, start time, and end time. Once the end time is reached, a voting system will be activated, allowing users to rate each other based on their skills and fair play.</p>
+</div>
 
-<button type="button" class="block" onclick="window.location.href='./create_group'" style="font-weight: bold;">CREATE LOBBY</button>
-<button type="button" class="block" onclick="window.location.href='./lo_lobbies'" style="font-weight: bold;">JOIN LOBBY</button>
-
+<script>
+    const dropdownElementList = document.querySelectorAll('.dropdown-toggle')
+    const dropdownList = [...dropdownElementList].map(dropdownToggleEl => new bootstrap.Dropdown(dropdownToggleEl))
+</script>
+<style>
+    .container {
+        background-color: rgba(255, 255, 255, 0.0);
+        margin-top: 30px;
+        color: #a4afcf;
+        border: none;
+    }
+</style>
 {% endblock %}

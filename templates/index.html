@@ -5,29 +5,23 @@
 {% endblock %}
 
 {% block main %}
-<body style="background-color: #1E2328;">
-    <div style="color: #ffff">
-        <h1 style="margin-bottom: 20px">WELCOME TO INVOLVE</h1>
-        <p class="h3">FIND SPORTS BUDDIES! </p>
-        <p class="h3">BASKETBALL, FOOTBALL, TENNIS, AND MORE</p>
-        <p class="h3">CREATE YOU'R OWN OR JOIN GROUPS</p>
-        <p class="h3">CREATE GAME SCHEDUALE</p>
-        <p class="h3" style="margin-bottom: 30px">GET ACTIVE!</p>
+<body>
+    <div>
+        <img src="static/images/getinvolve.png" alt="None" class="site-image">
     </div>
-    <div class="row">
-        <div class="column">
-          <img src="/static/images/image1.jpg" style="width:100%; margin-right: -40px">
-        </div>
-        <div class="column">
-          <img src="/static/images/image2.jpg" style="width:60%">
-        </div>
-        <div class="column">
-          <img src="/static/images/image3.jpg" style="width:135%; margin-left: -20px">
-        </div>
-      </div>
+    <div class="video-container">
+      <video controls>
+        <source src="/static/images/videoinv.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <div style="margin-top: 10px;">
+      <h1 style="color: #a4afcf;">Register now!</h1>
+    </div>
+
 </body>
 
-<div id="navbar" class="navbar navbar-expand-lg navbar-light bg-#1E90FF" style="left: 0;">
+<div id="navbar" class="navbar navbar-expand-lg navbar-light bg-#1E90FF" style="left: 0; background-image: url('static/images/bacground_bar.jpg'); background-repeat: no-repeat; background-size: cover;">
   <a href="/register"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
     <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1h-2zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1h-2z"/>
   </svg>
@@ -37,4 +31,30 @@
     <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
   </svg></a>
 </div>
+<style>
+  body {
+    background-image: url('static/images/bacground_index.jpg');
+    background-repeat: repeat-y;
+    background-size: cover;
+    /* Additional styles if needed */
+  }
+  .site-image {
+  max-width: 100%;
+  height: auto;
+  }
+  .video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* This sets the aspect ratio (16:9) */
+    height: 0;
+    overflow: hidden;
+  }
+
+  .video-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>
 {% endblock %}

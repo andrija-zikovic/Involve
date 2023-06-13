@@ -5,27 +5,156 @@
 {% endblock %}
 
 {% block main %}
-<h3 style="font-size: 30px; color: #333; margin-top: 10px; margin-bottom: 20px;">{{ group_name }}</h3>
-<div class="container">
+<h3 style="font-size: 30px; color: #a4afcf; margin-top: 10px; margin-bottom: 20px;">{{ group_name }}</h3>
+<div class="container-messages">
 {% for row in messages %}
-{% if row['user_id'] == user %}
-  <div class="container">
-    <img src="{{ row['img']}}" alt="Avatar">
-    <p>{{ row['message'] }}</p>
-    <span class="time-right">{{ row['datetime']}}</span>
+{% if row['user_id'] == user_id %}
+<div class="user-container">
+<div class="user-content">
+    <img src="{{ row['image'] }}" class="rounded-square user-img">
+    <p class="user-message">{{ row['message'] }}</p>
   </div>
+    <span class="time-user">{{ row['name']}} {{ row['datetime'] }}</span>
+</div>
 {% else %}
-  <div class="container">
-    <img src="{{ row['img']}}" alt="Avatar" class="rounded-square">
-    <p>{{ row['message'] }}</p>
-    <span class="time-right">{{ row['datetime']}}</span>
+<div class="other-container">
+  <div class="other-content">
+    <p class="other-message">{{ row['message'] }}</p>
+    <img src="{{ row['image'] }}" class="rounded-square other-img">
   </div>
+  <span class="time-other">{{ row['name']}} {{ row['datetime'] }}</span>
+</div>
 {% endif %}
 {% endfor%}
 </div>
 <form class="input-container" method="post" action="/chat">
     <input type="hidden" name="group_id" value="{{ group_id }}">
-    <input type="text" class="message-input" name="message" placeholder="Enter your message...">
-    <button type="submit" class="block" style="margin-top: 10px;">Send</button>
+    <input type="text" id ="message-input" class="message-input" name="message" placeholder="Enter your message..." autocomplete="off" style="background-color: #a4afcf;">
+    <button type="submit" class="btn btn-primary" style="height: 60px; margin-right: 10px; background-color:rgba(255, 255, 255, 0.0); border: none;"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="#a4afcf" class="bi bi-send-fill" viewBox="0 0 16 16">
+      <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+    </svg></button>
 </form>
+<script>
+  // Get the container-messages element
+const containerMessages = document.querySelector('.container-messages');
+
+// Function to scroll the container-messages element to the bottom
+function scrollToBottom() {
+  containerMessages.scrollTop = containerMessages.scrollHeight;
+}
+
+scrollToBottom();
+
+function clearInput() {
+  // Get the input element
+  var input = document.getElementById('message-input');
+
+  // Clear the input field
+  input.value = '';
+}
+</script>
+<script>
+var data = {
+  key1: '{{ group_id }}',
+  key2: '{{ count }}'
+};
+
+function fetchData() {  
+fetch('/get_new_msg', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(data)
+})
+.then(response => response.json())
+.then(result => {
+  // Handle the response from the Flask function
+  console.log(result); // Verify the response in the browser console
+
+  // Assuming `result` is an array of objects containing SQL data
+  result.forEach(row => {
+    // Check if row.user_id is equal to user_id
+    if (row.user_id === {{ user_id }}) {
+      // Create a new container element
+      const container = document.createElement('div');
+      container.classList.add('user-container');
+
+      // Create content container
+      const content = document.createElement('div');
+      content.classList.add('user-content');
+
+      // Create image element
+      const image = document.createElement('img');
+      image.src = row.image;
+      image.classList.add('rounded-square', 'user-img');
+      content.appendChild(image);
+
+      // Create message element
+      const message = document.createElement('p');
+      message.classList.add('user-message');
+      message.textContent = row.message;
+      content.appendChild(message);
+
+      // Append content to container
+      container.appendChild(content);
+
+      // Create time element
+      const time = document.createElement('span');
+      time.classList.add('time-user');
+      time.textContent = row.name + ' ' + row.datetime;
+      container.appendChild(time);
+
+      // Append the container to the existing container-messages
+      const containerMessages = document.querySelector('.container-messages');
+      containerMessages.appendChild(container);
+    
+    } else {
+
+      const container = document.createElement('div');
+      container.classList.add('other-container');
+
+      // Create content container
+      const content = document.createElement('div');
+      content.classList.add('other-content');
+
+      // Create image element
+      const image = document.createElement('img');
+      image.src = row.image;
+      image.classList.add('rounded-square', 'user-img');
+      content.appendChild(image);
+
+      // Create message element
+      const message = document.createElement('p');
+      message.classList.add('other-message');
+      message.textContent = row.message;
+      content.appendChild(message);
+
+      // Append content to container
+      container.appendChild(content);
+
+      // Create time element
+      const time = document.createElement('span');
+      time.classList.add('time-other');
+      time.textContent = row.name + ' ' + row.datetime;
+      container.appendChild(time);
+
+      // Append the container to the existing container-messages
+      const containerMessages = document.querySelector('.container-messages');
+      containerMessages.appendChild(container);
+    }
+  scrollToBottom();
+  clearInput();    
+  });
+  // Increment key2 by 1
+  data.key2 = (parseInt(data.key2) + 1).toString();
+})
+.catch(error => {
+  console.error('Error:', error);
+});
+}
+
+// Call the fetchData function every 5 seconds (5000 milliseconds)
+setInterval(fetchData, 500);
+</script>
 {% endblock %}

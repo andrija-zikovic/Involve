@@ -11,93 +11,50 @@
 {% block main %}
 {% if groups %}
 <div style="margin-top: 10;">
-  <h3 style="font-size: 30px; color: #333; margin-bottom: 20px; margin-top: 10px;">My Lobbies</h3>
+  <h3 style="font-size: 30px; color: #a4afcf; margin-bottom: 20px; margin-top: 10px;">My Lobbies</h3>
 </div>
-<table class="table table-striped mobile-table" style="margin-top: 10px;">
-  <thead>
-    <tr>
-      <th scope="col">Name</th>
-      <th scope="col">Sport</th>
-      <th scope="col">Location</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in groups %}
-    <tr onclick="navigateToURL('/lobby?group_id={{ row['group_id'] }}&group_name={{ row['name'] }}')" style="cursor: pointer; font-weight: bold;">
-      <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
-      <td class="text-nowrap" style="color: #1E90FF;">{{ row["sport"] }}</td>
-      <td class="text-nowrap" style="color: #1E90FF;" id="location{{ loop.index }}"></td>
-     </tr>
-     <tr>
-      <td class="text-nowrap">{{ row["user_count"]}}</td>
-      <td class="text-nowrap">{{ row["language"]}}</td>
-      <td class="text-nowrap">{{ row["time"] }}</td>
-    </tr>
+<div class="list-group">
+  {% for row in groups %}
+  <a href="#" class="list-group-item list-group-item-action active" aria-current="true" onclick="navigateToURL('/lobby?group_id={{ row['group_id'] }}&group_name={{ row['name'] }}')">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">{{ row['sport'] }} {{ row['time'] }}</h5>
+      <small>{{ row["user_count"] }}</small>
+    </div>
+    <div class="group-info">
+      <p class="mb-0">{{ row['name']}} Speaking language: {{ row['language']}}</p>
+      <small id="location{{ loop.index }}"></small>
+    </div>
+  </a>
+  {% endfor %}
+</div>  
+  {% else %}
+  <div class="message-alert">No groups!</div>
+  {% endif %}
     {% if sent_requests%}
+    <div class="list-group" style="font-size: small; b">
     {% for row in sent_requests %}
-    <tr onclick="navigateToURL('/profile?user_id={{ row['id'] }}')" style="cursor: pointer; font-weight: bold;">
-      <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
-      <td class="text-nowrap">Wonts to join Your group</td>
-      <td class="text-nowrap">{{ row["group_name"] }}</td>
-     </tr>
-     <tr>
-      <td class="text-nowrap"></td>
-      <td onclick="window.location.href='/join_request?user_id={{ row['id'] }}&group_id={{ row['group_id']}}';">ADD <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="#1E90FF" class="bi bi-check-circle" viewBox="0 0 16 18">
+    <div class="list-group-item list-group-item-action active" style="padding: 2px; width: auto, min-width: 300px;">
+    <div class="d-flex w-100 justify-content-between" style="font-size: medium;">
+      <p class="mb-0"><a onclick="navigateToURL('/profile?user_id={{ row['id'] }}')" style="font-weight: bold;">{{ row['name']}}</a> Wonts to join Your group {{ row["group_name"] }}</p>      
+    </div>
+    <div class="group-info" style="justify-content: center;">
+      <p class="mb-0" onclick="window.location.href='/join_request?user_id={{ row['id'] }}&group_id={{ row['group_id']}}';" style="margin-right: 5px;">ADD <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="#1E90FF" class="bi bi-check-circle" viewBox="0 0 16 18">
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
         <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-      </svg></td> </td>
-      <td onclick="window.location.href='/delete_request?user_id={{ row['id'] }}&group_id={{ row['group_id']}}';">DELETE <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-x-circle" viewBox="0 0 16 18">
+      </svg></p>
+      <p class="mb-0" onclick="window.location.href='/delete_request?user_id={{ row['id'] }}&group_id={{ row['group_id']}}';" tyle="margin-left: 5px;">DELETE <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-x-circle" viewBox="0 0 16 18">
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
         <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-      </svg></td>
-    </tr>
+      </svg></p>    
+    </div>
+    </div>
     {% endfor %}
+  </div>
+    {% else %}
+    <div class="message-alert">No requests!</div>
     {% endif %}
-    {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<div class="alert alert-success" style="margin-top: 10">No groups!</div>
-{% endif %}
-{% if requests %}
-<div style="margin-top: 10;">
-  <h3 style="font-size: 30px; color: #333; margin-bottom: 20px; margin-top: 10px;">Requests</h3>
-</div>
-<table class="table table-striped mobile-table" style="margin-top: 10px;">
-  <thead>
-    <tr>
-      <th scope="col">Name</th>
-      <th scope="col">Sport</th>
-      <th scope="col">Users</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in requests %}
-    <tr style="font-weight: bold; ">
-      <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
-      <td class="text-nowrap" style="color: #1E90FF;">{{ row["sport"] }}</td>
-      <td class="text-nowrap" style="color: #1E90FF;">{{ row["user_count"]}}</td>
-      <td onclick="window.location.href='/join_request?group_id={{ row['group_id'] }}';"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="#1E90FF" class="bi bi-check-circle" viewBox="0 0 16 18">
-        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-      </svg></td>
-    </tr>
-    <tr>
-      <td class="text-nowrap" id="locationr{{ loop.index }}"></td>
-      <td class="text-nowrap">{{ row["language"]}}</td>
-      <td class="text-nowrap">{{ row["time"] }}</td>
-      <td onclick="window.location.href='/delete_request?group_id={{ row['group_id'] }}';"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-x-circle" viewBox="0 0 16 18">
-        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-      </svg></td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<div class="alert alert-success">No requests!</div>
-{% endif %}
+
+
 {% for row in groups %}
 <script>
   function navigateToURL(url) {
@@ -244,5 +201,6 @@
         padding: px; /* Adjust the padding as needed */
       }
     }
+
 </style>
 {% endblock %}

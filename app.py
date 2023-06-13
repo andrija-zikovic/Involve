@@ -4,9 +4,9 @@ import sqlite3
 from datetime import datetime
 from cs50 import SQL
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for
+from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for, Response
 from flask_session import Session
-from helpers import login_required, user_name
+from helpers import login_required, user_name, new_msg_check, vote_check
 
 
 # Configure application
@@ -152,9 +152,7 @@ def create_group():
 
         user_ids = [] # empty tuple for users ids that we wont to send request to
 
-        file = "my_file" # creating csv file for chat and unique code
-        ext = os.path.splitext(file)
-        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        unique_filename = f"{uuid.uuid4().hex}"
 
         for user_id in selected_user_ids: # puting users ids in empty tuple
             user_ids.append(user_id)
@@ -183,10 +181,11 @@ def create_group():
 @login_required
 def edit_profile():
     user_id = session.get("user_id")
+    name = user_name(user_id, db)
     data = db.execute("SELECT name, surname, city, state, filepath, lang1, lang2 FROM users_info JOIN images ON users_info.id = images.user_id WHERE id = ?", user_id)
 
     if request.method == "GET":
-        return render_template("edit_profile.html", data=data)
+        return render_template("edit_profile.html", data=data, name=name)
     else:
         # Get the uploaded file and user ID
         user_id = session.get("user_id")
@@ -223,6 +222,7 @@ def edit_profile():
         state = request.form.get('state')
         lang1 = request.form.get('lang1')
         lang2 = request.form.get('lang2')
+        abouty = request.form.get('info')
 
         update_query = 'UPDATE users_info SET'
         params = []
@@ -235,6 +235,11 @@ def edit_profile():
         if surname:
             update_query += ' surname = ?,'
             params.append(surname)
+        else:
+            pass
+        if abouty:
+            update_query += ' info = ?,'
+            params.append(abouty)
         else:
             pass
         if city:
@@ -256,7 +261,7 @@ def edit_profile():
             update_query += ' lang2 = ?,'
             params.append(lang2)
         else:
-            return redirect("/edit_profile")
+            pass
         # Remove the trailing comma from the query
         update_query = update_query.rstrip(',')
 
@@ -274,11 +279,12 @@ def edit_profile():
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-
+    
     user_id = session.get("user_id")
-    users_info = db.execute("SELECT users_info.id AS id, name, surname, state, city, lang1, filepath, skill / skill_count AS skill, fairplay / fairplay_count AS fairplay, friendliness / friendliness_count AS friendliness FROM users_info JOIN images ON users_info.id = images.user_id JOIN ratings ON users_info.id = ratings.id  WHERE users_info.id = ? ;", user_id)
+    name = user_name(user_id, db)
+    users_info = db.execute("SELECT users_info.id AS id, name, surname, info, state, city, lang1, filepath, skill / skill_count AS skill, fairplay / fairplay_count AS fairplay, friendliness / friendliness_count AS friendliness FROM users_info JOIN images ON users_info.id = images.user_id JOIN ratings ON users_info.id = ratings.id  WHERE users_info.id = ? ;", user_id)
 
-    return render_template('profile.html', data=users_info)
+    return render_template('profile.html', data=users_info, name=name)
 
 
 
@@ -287,7 +293,7 @@ def profile():
 @login_required
 def lobbies():
     user = session.get("user_id")
-    join_requests = db.execute("SELECT groups.*, user_counts.user_count FROM groups JOIN user_groups ON groups.group_id = user_groups.group_id JOIN (SELECT user_groups.group_id, SUM(CASE WHEN user_groups.status = 1 THEN 1 ELSE 0 END) || '/' || groups.size AS user_count FROM user_groups JOIN groups ON user_groups.group_id = groups.group_id WHERE user_groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = ?) GROUP BY user_groups.group_id) AS user_counts ON groups.group_id = user_counts.group_id WHERE user_groups.user_id = ? AND user_groups.status = 0", user, user )
+    join_requests = db.execute("SELECT groups.*, user_counts.user_count FROM groups JOIN user_groups ON groups.group_id = user_groups.group_id JOIN (SELECT user_groups.group_id, SUM(CASE WHEN user_groups.status = 1 THEN 1 ELSE 0 END) || '/' || groups.size AS user_count FROM user_groups JOIN groups ON user_groups.group_id = groups.group_id WHERE user_groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = ?) GROUP BY user_groups.group_id) AS user_counts ON groups.group_id = user_counts.group_id WHERE user_groups.user_id = ? AND user_groups.status = 0 AND user_groups.send = 0", user, user )
     sent_requests = db.execute("SELECT users_info.id, users_info.name || ' ' || users_info.surname AS name, users_info.city, users_info.lang1, user_groups.group_id, user_groups.status, groups.name AS group_name, user_groups.send FROM users_info JOIN user_groups ON users_info.id = user_groups.user_id JOIN groups ON user_groups.group_id = groups.group_id WHERE user_groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = ? AND creator = 1) AND user_groups.send = 2 AND user_groups.status = 0", user)
     groups_names = db.execute("SELECT groups.* , SUM(CASE WHEN user_groups.status = 1 THEN 1 ELSE 0 END) || '/' || groups.size AS user_count, groups.start_time || 'h - ' || groups.end_time || 'h ' || groups.date AS time FROM groups JOIN user_groups ON groups.group_id = user_groups.group_id  WHERE groups.group_id IN (SELECT group_id FROM user_groups WHERE user_id = ? AND status = 1) GROUP BY groups.group_id;", user)
     name = user_name(user, db)
@@ -299,7 +305,9 @@ def lobby():
     user = session.get("user_id")
     group_id = request.args.get('group_id')
     group_name = request.args.get('group_name')
-    votes = db.execute("SELECT * FROM votes WHERE group_id = ? ORDER BY voter_id", group_id)
+    name = user_name(user, db)
+    check = vote_check(group_id, db)
+    votes = db.execute("SELECT * FROM votes WHERE group_id = ? AND voter_id = ? ORDER BY voter_id", group_id, user)
     users_info = db.execute("SELECT users_info.id AS id, group_id, name, surname, state, city, lang1, filepath, skill / skill_count AS skill, fairplay / fairplay_count AS fairplay, friendliness / friendliness_count AS friendliness, creator FROM users_info JOIN user_groups ON users_info.id = user_groups.user_id JOIN images ON users_info.id = images.user_id JOIN ratings ON users_info.id = ratings.id  WHERE user_groups.group_id = ? ;", group_id)
     users_info.sort(key=lambda x: x['id'] != user)
     group_info = db.execute("SELECT groups.* , SUM(CASE WHEN user_groups.status = 1 THEN 1 ELSE 0 END) || '/' || groups.size AS user_count, groups.start_time || 'h - ' || groups.end_time || 'h ' || groups.date AS time FROM groups JOIN user_groups ON groups.group_id = user_groups.group_id  WHERE groups.group_id= ?;", group_id)
@@ -310,12 +318,13 @@ def lobby():
     group_datetime = datetime.strptime(f"{date_value} {end_time_value}", "%d.%m.%y %H:%M")
     current_datetime = datetime.now()
     formatted_datetime = datetime.strptime(current_datetime.strftime("%d.%m.%y %H:%M"), "%d.%m.%y %H:%M")
-
     time = False
     if group_datetime < formatted_datetime:
         time = True
-
-    return render_template('lobby.html', group_name=group_name, users=users_info, user=user, votes=votes, group_id=group_id, group_info=group_info, time_check=time)
+    print(time)
+    print(group_datetime)
+    print(formatted_datetime)
+    return render_template('lobby.html', group_name=group_name, users=users_info, user=user, votes=votes, group_id=group_id, group_info=group_info, time_check=time, name=name, check=check)
 
 @app.route("/user_profile", methods=["GET", "POST"])
 @login_required
@@ -357,6 +366,7 @@ def delete_group():
         db.execute("DELETE FROM votes WHERE group_id = ?", group_id)
         db.execute("DELETE FROM user_groups WHERE group_id = ?", group_id)
         db.execute("DELETE FROM groups WHERE group_id = ?", group_id)
+        db.execute("DELETE FROM messages WHERE group_id = ?", group_id)
 
     flash("Lobby deleted successfully!")
     return redirect("/user_interface")
@@ -365,9 +375,10 @@ def delete_group():
 @login_required
 def lo_lobbies():
     user = session.get("user_id")
+    name = user_name(user, db)
     groups = db.execute("SELECT groups.group_id AS id, groups.name, COUNT(user_groups.user_id) AS user_count, sport, language, location_lati, location_long, start_time || 'h - ' || end_time || 'h ' || date AS time FROM groups JOIN user_groups ON groups.group_id = user_groups.group_id WHERE groups.group_id NOT IN (SELECT group_id FROM user_groups WHERE user_id = ? AND status = 1) GROUP BY groups.group_id, groups.name;", user)
 
-    return render_template('lo_lobbies.html', data=groups)
+    return render_template('lo_lobbies.html', data=groups, name=name)
 
 @app.route("/search", methods=["GET", "POST"])
 @login_required
@@ -378,7 +389,7 @@ def search():
     user_ids = users.split(",") if users else []
 
     # Connect to your SQLite database
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('DATABASE/database.db')
     cursor = conn.cursor()
 
     # Execute the SQL query to search for users based on the query
@@ -424,7 +435,8 @@ def settings_group():
     else:
         group_id = request.args.get('group_id')
         group_name = request.args.get('group_name')
-        return render_template("settings_group.html", group_id=group_id, group_name=group_name)
+        group_info = db.execute("SELECT * FROM groups WHERE group_id = ?", group_id)
+        return render_template("settings_group.html", group_id=group_id, group_name=group_name, group_info=group_info)
 
 @app.route("/join_request", methods=["GET", "POST"])
 @login_required
@@ -468,23 +480,24 @@ def delete_request():
 @login_required
 def start_voting():
     group_id = request.args.get('group_id')
-
     user_ids = db.execute("SELECT user_id FROM user_groups WHERE group_id = ? AND status = 1", group_id)
-
-    for user_id in user_ids:
-        for user in user_ids:
-            if user == user_id:
-                pass
-            else:
-                db.execute("INSERT INTO votes (group_id, voter_id, member_id) VALUES (?, ?, ?)", group_id, user_id['user_id'], user['user_id'])
-
+    vote_status1 = db.execute("SELECT vote FROM groups WHERE group_id = ?", group_id)
+    vote_status = vote_status1[0]['vote']
+    if vote_status == 0:
+        db.execute("UPDATE groups SET vote = 1 WHERE group_id = ?", group_id)
+        for user_id in user_ids:
+            db.execute("INSERT INTO user_history (name, code, sport, location_lati, location_long, time, ?) SELECT name, code, sport, location_lati, location_long, date || ' ' || start_time AS time FROM groups WHERE group_id = ?", user_id, group_id)
+            for user in user_ids:
+                if user == user_id:
+                    pass
+                else:
+                    db.execute("INSERT INTO votes (group_id, voter_id, member_id) VALUES (?, ?, ?)", group_id, user_id['user_id'], user['user_id'])
+   
     return redirect(request.referrer or url_for('lobby'))
 
 @app.route("/chat", methods=["GET", "POST"])
 @login_required
 def chat():
-    group_id = request.args.get('group_id')
-    group_name = request.args.get('group_name')
     if request.method == "POST":
         group_id = request.form.get('group_id')
         message = request.form.get('message')
@@ -492,7 +505,43 @@ def chat():
         formatted_datetime = current_datetime.strftime("%H:%M %d.%m.%Y")
         user_id = session.get("user_id")
         db.execute("INSERT INTO messages (group_id, user_id, message, datetime) VALUES (?, ?, ?, ?)", group_id, user_id, message, formatted_datetime)
-        return redirect(request.referrer or url_for('chat'))
+        return Response(status=204)
     else:
-        messages = db.execute("SELECT messages.group_id, messages.user_id, users_info.name || ' ' || users_info.surname AS name, messages.message, messages.datetime FROM messages JOIN users_info ON messages.user_id = users_info.id WHERE messages.group_id = ?", group_id)
-        return render_template("chat.html", group_name=group_name, messages=messages, group_id=group_id)
+        group_name = request.args.get('group_name')
+        group_id = request.args.get('group_id')
+        user_id = session.get("user_id")
+        messages = db.execute("SELECT messages.group_id, messages.user_id, users_info.name || ' ' || users_info.surname AS name, messages.message, messages.datetime, images.filepath AS image FROM messages JOIN users_info ON messages.user_id = users_info.id JOIN images ON messages.user_id = images.user_id WHERE messages.group_id = ?", group_id)
+        message_count = db.execute("SELECT COUNT(message) AS count FROM messages WHERE group_id = ?", group_id)
+        count = message_count[0]['count']
+        return render_template("chat.html", group_name=group_name, messages=messages, group_id=group_id, user_id=user_id, count=count)
+
+
+@app.route("/get_new_msg", methods=["POST"])
+@login_required
+def get_new_msg():
+    data = request.json
+    
+    group_id = data.get('key1')
+    
+    count = data.get('key2')
+    
+    check = new_msg_check(group_id, db, count)
+    
+    if check:
+        message = db.execute("""
+            SELECT messages.id, messages.group_id, messages.user_id,
+            users_info.name || ' ' || users_info.surname AS name,
+            messages.message, messages.datetime, images.filepath AS image
+            FROM messages
+            JOIN users_info ON messages.user_id = users_info.id
+            JOIN images ON messages.user_id = images.user_id
+            WHERE messages.group_id = ?
+            ORDER BY messages.id DESC
+            LIMIT 1
+            """, group_id)
+        
+        if message:
+            response = jsonify(message)
+            return response
+    
+    return jsonify({'error': 'No new messages or invalid request'})

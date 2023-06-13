@@ -22,6 +22,9 @@
     <input type="hidden" id="selectedUsersInput" name="selected_users" value="">
 
     <h2 style="margin-top: 20px;">Change location</h2>
+    <div class="search-container" style="margin-bottom: 0;">
+        <input class="input" type="text" id="location-search" placeholder="Search for a location">
+    </div>
     <div id="map" style="height: 400px; width: 400px; margin: 0 auto;"></div>
 
     <div style="margin-top: 5px;">
@@ -34,51 +37,86 @@
     <input type="hidden" name="group_id" value="{{ group_id }}">
     <button type="submit" class="btn" style="font-weight: bold; background-color: red;">DELETE LOBBY</button>
 </form>
+{% for row in group_info %}
 <script>
-        // Initialize the map
-        function initMap() {
-          // Set the map options
-          var mapOptions = {
-            center: { lat: 37.09024, lng: -95.712891 }, // Set initial map center
-            zoom: 10 // Set initial zoom level
-          };
+function showMap(latitude, longitude) {
+    // Create a map centered at the specified latitude and longitude
+    const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: latitude, lng: longitude },
+        zoom: 10,
+    });
 
-          // Create the map instance
-          var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+    var marker;
 
-          // Create a marker variable to store the user-selected location
-          var marker;
-
-          // Add a click event listener to the map
-          google.maps.event.addListener(map, "click", function(event) {
-            // Check if a marker already exists
-            if (marker) {
-              // If a marker exists, remove it from the map
-              marker.setMap(null);
-            }
-
-            // Create a new marker at the clicked location
+    // Function to create or update the marker position
+    function updateMarker(position) {
+        if (marker) {
+            // If a marker already exists, update its position
+            marker.setPosition(position);
+        } else {
+            // Create a new marker at the specified location
             marker = new google.maps.Marker({
-              position: event.latLng,
-              map: map
+                position: position,
+                map: map,
+                draggable: true // Make the marker draggable
             });
+        }
+    }
 
-            // Store the selected location's latitude and longitude
-            var latitude = event.latLng.lat();
-            var longitude = event.latLng.lng();
+    // Call the updateMarker function initially with the provided latitude and longitude
+    updateMarker({ lat: latitude, lng: longitude });
 
-            // Use the latitude and longitude as desired (e.g., store in a form field, send to the server)
-            console.log("Latitude: " + latitude);
-            console.log("Longitude: " + longitude);
+    // Add a dragend event listener to the marker
+    google.maps.event.addListener(marker, "dragend", function(event) {
+        // Get the marker's new position
+        var newLatitude = event.latLng.lat();
+        var newLongitude = event.latLng.lng();
 
-            // Store the latitude and longitude in hidden input fields
-            document.getElementById("latitude").value = latitude;
-            document.getElementById("longitude").value = longitude;
-          });
+        // Use the new latitude and longitude as desired (e.g., store in a form field, send to the server)
+        console.log("New Latitude: " + newLatitude);
+        console.log("New Longitude: " + newLongitude);
+
+        // Store the new latitude and longitude in hidden input fields
+        document.getElementById("latitude").value = newLatitude;
+        document.getElementById("longitude").value = newLongitude;
+    });
+
+    // Create a search box for location search
+    const searchBox = new google.maps.places.SearchBox(document.getElementById("location-search"));
+
+    // Bias the search box to the map's viewport
+    map.addListener("bounds_changed", function() {
+        searchBox.setBounds(map.getBounds());
+    });
+
+    // Listen for the event when the user selects a prediction from the search box
+    searchBox.addListener("places_changed", function() {
+        const places = searchBox.getPlaces();
+
+        if (places.length === 0) {
+            return;
         }
 
-        // Call the initMap function when the page has finished loading
-        google.maps.event.addDomListener(window, "load", initMap);
+        // Update the map center to the selected place
+        const selectedPlace = places[0];
+        map.setCenter(selectedPlace.geometry.location);
+        updateMarker(selectedPlace.geometry.location);
+    });
+}
+
+// Call the showMap function after the page has finished loading
+window.addEventListener("load", function() {
+    // Retrieve the latitude and longitude values passed from the Flask route
+    var latitude = parseFloat("{{ row['location_lati'] }}");
+    var longitude = parseFloat("{{ row['location_long'] }}");
+
+    // Call the showMap function with the latitude and longitude values
+    showMap(latitude, longitude);
+});
+
+// Rest of the code...
+
+
 
 
         function searchUsers() {
@@ -169,7 +207,14 @@ var timeRange = startTime + ' - ' + endTime;
 
 // Output the combined time range
 console.log(timeRange);
+
+document.getElementById('location-search').addEventListener('keydown', function(event) {
+  // Check if the Enter key was pressed
+  if (event.key === 'Enter') {
+    event.preventDefault(); // Prevent form submission
+    return false;
+  }
+});
 </script>
-
-
+{% endfor %}
 {% endblock %}

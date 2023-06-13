@@ -1,0 +1,184 @@
+__________________________________________________________________________________________________________________________
+__________________________________________________________________________________________________________________________
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+CREATE GROUP search functions and html for sending invites
+
+<div class="form-inline" style="margin-top: 20px;">
+      <label style="display: block;">Send invites :</label>
+      <input type="text" class="input" name="query" id="searchInput" onkeyup="searchUsers()" placeholder="Enter a name/surname.." >
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <input type="hidden" id="selectedUsersInput" name="selected_users" value="{{ user_id }}">
+
+    <div id="selectedUsersContainer" class="table-responsive table-container" style="margin-bottom: 20px; display: none;">
+      <h2>Selected Users</h2>
+      <table class="table table-striped mobile-table" id="selectedUsersTable">
+          <thead>
+              <tr>
+                  <th></th>
+                  <th>Name</th>
+                  <th>Surname</th>
+                  <th>State</th>
+                  <th>City</th>
+                  <th>Skill</th>
+                  <th>Fairplay</th>
+                  <th>Friendliness</th>
+              </tr>
+          </thead>
+          <tbody id="selectedUsers"></tbody>
+      </table>
+    </div>
+
+function searchUsers() {
+var input = document.getElementById("searchInput");
+var resultsContainer = document.getElementById("searchResults");
+
+// Create a FormData object to send the form data to the server
+var formData = new FormData();
+formData.append("query", input.value);
+
+// Send an asynchronous request to the server to fetch search results
+fetch("/search", {
+    method: "POST",
+    body: formData
+})
+.then(response => response.json())
+.then(data => {
+    // Clear the previous search results
+    resultsContainer.innerHTML = "";
+
+    // Loop through the received data and create list items
+    data.forEach(user => {
+        var listItem = document.createElement("li");
+        listItem.textContent = user[1] + " " + user[2] + " " + user[3] + " " + user[4] + " ";
+
+          // Create an image element
+        var image = document.createElement("img");
+        image.src = user[8]; // Assuming user[8] contains the path to the image
+        image.alt = "User Image";
+        image.classList.add("rounded-square-lobby");
+        listItem.appendChild(image);
+
+        listItem.addEventListener("click", function() {
+        input.value = user[1] + " " + user[2];
+        resultsContainer.innerHTML = "";
+
+        // Add the selected user ID to the hidden input field
+        var selectedUsersInput = document.getElementById("selectedUsersInput");
+        var selectedUserId = String(user[0]);
+
+        if (selectedUsersInput.value === "") {
+          selectedUsersInput.value = selectedUserId;
+        } else {
+          var selectedUserIds = selectedUsersInput.value.split(",");
+          if (!selectedUserIds.includes(selectedUserId)) {
+            selectedUsersInput.value += "," + selectedUserId;
+            // Add the selected username to the selected users list
+            var selectedUsersList = document.getElementById("selectedUsers");
+            var newRow = selectedUsersTable.insertRow();
+            var imgCell = newRow.insertCell();
+            var nameCell = newRow.insertCell();
+            var surnameCell = newRow.insertCell();
+            var stateCell = newRow.insertCell();
+            var cityCell = newRow.insertCell();
+            var skillCell = newRow.insertCell();
+            var fairplayCell = newRow.insertCell();
+            var friendlinessCell = newRow.insertCell();
+            imgCell.appendChild(image);
+            nameCell.textContent = user[1];
+            surnameCell.textContent = user[2];
+            stateCell.textContent = user[3];
+            cityCell.textContent = user[4];
+            skillCell.textContent = user[5];
+            fairplayCell.textContent = user[6];
+            friendlinessCell.textContent = user[7];
+            // Show the container if it was previously hidden
+            if (selectedUsersContainer.style.display === "none") {
+              selectedUsersContainer.style.display = "block";
+            }
+          }
+          else {
+            alert( user[1] + " " + user[2] + " is already added!");
+          }
+        }
+
+        input.value = "";
+        });
+
+        resultsContainer.appendChild(listItem);
+    });
+
+})
+
+.catch(error => {
+    console.error("Error fetching search results:", error);
+});
+}
+
+// Add blur event listener to the search input
+input.addEventListener("blur", function () {
+  // Check if the blur event is triggered by clicking outside the search input and results container
+  setTimeout(function () {
+    if (!input.contains(document.activeElement) && !resultsContainer.contains(document.activeElement)) {
+      resultsContainer.innerHTML = "";
+    }
+  }, 100);
+});
+
+// Add click event listener to the document to handle clicks outside the search input and results container
+document.addEventListener("click", function (event) {
+  if (!input.contains(event.target) && !resultsContainer.contains(event.target)) {
+    resultsContainer.innerHTML = "";
+    input.value = "";
+  }
+});
+__________________________________________________________________________________________________________________________
+__________________________________________________________________________________________________________________________
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+Reciving a invites from creator (html)
+
+{% if requests %}
+<div style="margin-top: 10;">
+  <h3 style="font-size: 30px; color: #333; margin-bottom: 20px; margin-top: 10px;">Requests</h3>
+</div>
+<table class="table table-striped mobile-table" style="margin-top: 10px;">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Sport</th>
+      <th scope="col">Users</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in requests %}
+    <tr style="font-weight: bold; ">
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["name"] }}</td>
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["sport"] }}</td>
+      <td class="text-nowrap" style="color: #1E90FF;">{{ row["user_count"]}}</td>
+      <td onclick="window.location.href='/join_request?group_id={{ row['group_id'] }}';"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="#1E90FF" class="bi bi-check-circle" viewBox="0 0 16 18">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+      </svg></td>
+    </tr>
+    <tr>
+      <td class="text-nowrap" id="locationr{{ loop.index }}"></td>
+      <td class="text-nowrap">{{ row["language"]}}</td>
+      <td class="text-nowrap">{{ row["time"] }}</td>
+      <td onclick="window.location.href='/delete_request?group_id={{ row['group_id'] }}';"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="red" class="bi bi-x-circle" viewBox="0 0 16 18">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+      </svg></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+
+{% endif %}
+
+__________________________________________________________________________________________________________________________
+__________________________________________________________________________________________________________________________
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

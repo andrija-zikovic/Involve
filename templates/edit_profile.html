@@ -5,73 +5,63 @@
 {% endblock %}
 
 {% block main %}
-    <div class="col-75" style="margin-bottom: 60px;">
-      <div class="container">
-        <form action="/edit_profile" method="POST" enctype="multipart/form-data">
+<form action="/edit_profile" method="POST" enctype="multipart/form-data">
+    <div class="list-group">
+      <h3>Edit Profile</h3>
+      {% for row in data%}
+      <label for="name">Name:</label>
+      {% if row['name'] == NULL %}
+      <input type="text" id="name" name="firstname" placeholder="Enter name..">
+      {% else %}
+      <input type="text" id="name" name="firstname" placeholder="{{ row['name'] }}">
+      {% endif %}
+      <label for="sname">Surname:</label>
+      {% if row['surname'] == NULL %}
+      <input type="text" id="sname" name="surename" placeholder="Enter surname..">
+      {% else%}
+      <input type="text" id="sname" name="surename" placeholder="{{ row['surname'] }}">
+      {% endif %}
+      <label for="city">City:</label>
+      {% if row['city'] == NULL %}
+      <input type="text" id="city" name="city" placeholder="Enter city..">
+      {% else %}
+      <input type="text" id="city" name="city" placeholder="{{ row['city'] }}">
+      {% endif %}
+      <label for="state">State:</label>
+      {% if row['state'] == NULL %}
+      <input type="text" id="state" name="state" placeholder="Enter state..">
+      {% else %}
+      <input type="text" id="state" name="state" placeholder="{{ row['state'] }}">
+      {% endif %}
+      <label for="lang1">First Language:</label>
+      {% if row['lang1'] == None or row['lang1'] == NULL or row['lang1'] == ""  %}
+      <input type="text" id="lang1" name="lang1" list="langSuggestions1" placeholder="First Language..">
+      <datalist id="langSuggestions1"></datalist>
+      {% else %}
+      <input type="text" id="lang1" name="lang1" list="langSuggestions1" placeholder="{{ row['lang1'] }}">
+      <datalist id="langSuggestions1"></datalist>
+      {% endif %}
+      <label for="state">Second Language:</label>
+      {% if row['lang2'] == None or row['lang2'] == NULL or row['lang2'] == ""  %}
+      <input type="text" id="lang2" name="lang2" list="langSuggestions2" placeholder="Second Language..">
+      <datalist id="langSuggestions2"></datalist>
+      {% else %}
+      <input type="text" id="lang2" name="lang2" list="langSuggestions2" placeholder="{{ row['lang2'] }}">
+      <datalist id="langSuggestions2"></datalist>
+      {% endif %}
+      <label for="info">About yourself :</label>
+      <input type="text" id="info" name="info" placeholder="Somthing about you..">
+      <lable for="image">Current profile picture:  </lable>
+      <img src="{{ row['filepath'] }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; margin-left: 10px;">
+      {% endfor %}
 
-          <div class="row">
-            <div class="col-50">
-              <h3>Edit Profile</h3>
-              {% for row in data%}
-              <label for="name">Name:</label>
-              {% if row['name'] == NULL %}
-              <input type="text" id="name" name="firstname" placeholder="Enter name..">
-              {% else %}
-              <input type="text" id="name" name="firstname" placeholder="{{ row['name'] }}">
-              {% endif %}
-              <label for="sname">Surname:</label>
-              {% if row['surname'] == NULL %}
-              <input type="text" id="sname" name="surename" placeholder="Enter surname..">
-              {% else%}
-              <input type="text" id="sname" name="surename" placeholder="{{ row['surname'] }}">
-              {% endif %}
-              <label for="city">City:</label>
-              {% if row['city'] == NULL %}
-              <input type="text" id="city" name="city" placeholder="Enter city..">
-              {% else %}
-              <input type="text" id="city" name="city" placeholder="{{ row['city'] }}">
-              {% endif %}
-              <label for="state">State:</label>
-              {% if row['state'] == NULL %}
-              <input type="text" id="state" name="state" placeholder="Enter state..">
-              {% else %}
-              <input type="text" id="state" name="state" placeholder="{{ row['state'] }}">
-              {% endif %}
-              <label for="lang1">First Language:</label>
-              {% if row['lang1'] == None or row['lang1'] == NULL or row['lang1'] == ""  %}
-              <input type="text" id="lang1" name="lang1" list="langSuggestions1" placeholder="First Language..">
-              <datalist id="langSuggestions1"></datalist>
-              {% else %}
-              <input type="text" id="lang1" name="lang1" list="langSuggestions1" placeholder="{{ row['lang1'] }}">
-              <datalist id="langSuggestions1"></datalist>
-              {% endif %}
-              <label for="state">Second Language:</label>
-              {% if row['lang2'] == None or row['lang2'] == NULL or row['lang2'] == ""  %}
-              <input type="text" id="lang2" name="lang2" list="langSuggestions2" placeholder="Second Language..">
-              <datalist id="langSuggestions2"></datalist>
-              {% else %}
-              <input type="text" id="lang2" name="lang2" list="langSuggestions2" placeholder="{{ row['lang2'] }}">
-              <datalist id="langSuggestions2"></datalist>
-              {% endif %}
-              <lable for="image">Profile picture:  </lable>
-              <img src="{{ row['filepath'] }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; margin-left: 10px;">
-              {% endfor %}
-              <div class="custom-file">
-                <input type="file" class="custom-file-input" id="myFile" name="filename">
-                <label class="custom-file-label" for="myFile"></label>
-              </div>
-              <style>
-                /* Hide the second file input button */
-                input[type=file]::-webkit-file-upload-button {
-                  display: none;
-                }
-              </style>
-              <input type="submit" value="Save Changes" class="btn">
-            </div>
-          </div>
-        </form>
+      <div class="custom-file">
+        <label class="custom-file-label" for="myFile"></label>
+        <input type="file" class="custom-file-input" id="myFile" name="filename" style="color: black;">
       </div>
+      <button type="submit" class="btn btn-primary" style="font-weight: bold; margin-right: 10px; background-color: #a4afcf; color: black; border-color: #a4afcf; margin: 10px;">Save changes</button>
     </div>
+</form>
 
 <script>
   const languages = ['English','Spanish',
@@ -156,4 +146,16 @@
   const langSuggestions2 = document.getElementById('langSuggestions2');
   suggestLanguages(langInput2, langSuggestions2);
 </script>
+<style>
+  /* Hide the second file input button */
+  input[type=file]::-webkit-file-upload-button {
+    display: none;
+  }
+
+  input[type=text], input[type=file] {
+    width: 200px; /* Adjust this value to the desired width */
+    background-color: #a4afcf;
+    height: 30px;
+  }
+</style>
 {% endblock %}

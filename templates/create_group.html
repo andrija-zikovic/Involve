@@ -5,17 +5,17 @@
 {% endblock %}
 
 {% block main %}
-<div style="margin-bottom: 70px;">
-<h1 style="margin-bottom: 20px;">Create Group</h1>
+<div style="margin-bottom: 10px;">
+<h1 style="margin-bottom: 10px; color: #a4afcf;">Create Group</h1>
 
-<form action="{{ url_for('create_group') }}" method="post">
+<form action="{{ url_for('create_group') }}" method="post" style="color: #a4afcf">
     <div class="search-container">
         <input type="text" class="input" id="group_name" name="group_name" required placeholder="Enter a group name..">
     </div>
 
     <div class="form-group">
       <div class="form-inline">
-        <lable></lable>
+        <lable style="display: block; margin-bottom: 5px;">Select sport and language</lable>
         <select class="input" id="sport" name="sport" required style="margin-right: 10px;">
           <option value="" disabled selected>Select a sport...</option>
           <option value="Badminton">Badminton</option>
@@ -79,10 +79,9 @@
         </select>
       </div>
     </div>
-
+    <label style="display: block; margin-bottom: 5px;">Select time and date :</label>
     <div class="form-group">
       <div class="form-inline">
-        <h5>Time of event:</h5>
         <label for="start-time">Start Time:</label>
         <input type="time" id="startTime" name="start-time" required>
 
@@ -90,43 +89,20 @@
         <input type="time" id="endTime" name="end-time" required>
       </div>
     </div>
-    <div class="form-inline">
+    <div class="form-inline" style="margin-bottom: 10px;">
       <lable for="date">Date:</lable>
       <input type="date" id="date" name="date" required>
     </div>
-    <div class="form-inline" style="margin-top: 10px;">
+    <div class="form-inline" style="margin-bottom: 10px; margin-top: 10px;">
       <lable for="size">Size of group:</lable>
       <input type="number" name="size" min="2" max="99" required>
       <span class="input-text">(min 2, max 99)</span>
     </div>
-    <div class="search-container" style="margin-top: 20px;">
-      <input type="text" class="input" name="query" id="searchInput" onkeyup="searchUsers()" placeholder="Enter a name/surname.." >
-      <div class="search-results" id="searchResults"></div>
+    
+    <div class="search-container">
+      <label style="display: block;">Choose location :</label>
+      <input class="input" type="text" id="location-search" placeholder="Search for a location">
     </div>
-
-    <input type="hidden" id="selectedUsersInput" name="selected_users" value="{{ user_id }}">
-
-    <h2>Selected Users</h2>
-
-    <div id="selectedUsersContainer" class="table-responsive table-container" style="margin-bottom: 20px; display: none;">
-      <table class="table table-striped mobile-table" id="selectedUsersTable">
-          <thead>
-              <tr>
-                  <th></th>
-                  <th>Name</th>
-                  <th>Surname</th>
-                  <th>State</th>
-                  <th>City</th>
-                  <th>Skill</th>
-                  <th>Fairplay</th>
-                  <th>Friendliness</th>
-              </tr>
-          </thead>
-          <tbody id="selectedUsers"></tbody>
-      </table>
-    </div>
-
-    <h2 style="margin-top: 20px;">Choose location!</h2>
     <div id="map" style="height: 400px; width: 400px; margin: 0 auto;"></div>
 
     <div style="margin-top: 5px;">
@@ -134,161 +110,88 @@
       <input  id="longitude" name="longitude" required>
     </div>
 
-    <button type="submit" class="btn btn-primary">Create Group</button>
+    <button type="submit" class="btn btn-primary" style="font-weight: bold; margin-right: 10px; background-color: #a4afcf; color: black; border-color: #a4afcf; margin: 10px;">Create Group</button>
 </form>
 </div>
 <script>
-        // Initialize the map
-        function initMap() {
-          // Set the map options
-          var mapOptions = {
-            center: { lat: 37.09024, lng: -95.712891 }, // Set initial map center
-            zoom: 10 // Set initial zoom level
-          };
+function initMap() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
 
-          // Create the map instance
-          var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+        // Use the latitude and longitude values as needed
+        console.log("Latitude: " + latitude);
+        console.log("Longitude: " + longitude);
 
-          // Create a marker variable to store the user-selected location
-          var marker;
-
-          // Add a click event listener to the map
-          google.maps.event.addListener(map, "click", function(event) {
-            // Check if a marker already exists
-            if (marker) {
-              // If a marker exists, remove it from the map
-              marker.setMap(null);
-            }
-
-            // Create a new marker at the clicked location
-            marker = new google.maps.Marker({
-              position: event.latLng,
-              map: map
-            });
-
-            // Store the selected location's latitude and longitude
-            var latitude = event.latLng.lat();
-            var longitude = event.latLng.lng();
-
-            // Use the latitude and longitude as desired (e.g., store in a form field, send to the server)
-            console.log("Latitude: " + latitude);
-            console.log("Longitude: " + longitude);
-
-            // Store the latitude and longitude in hidden input fields
-            document.getElementById("latitude").value = latitude;
-            document.getElementById("longitude").value = longitude;
-          });
-        }
-
-        // Call the initMap function when the page has finished loading
-        google.maps.event.addDomListener(window, "load", initMap);
-
-
-        function searchUsers() {
-        var input = document.getElementById("searchInput");
-        var resultsContainer = document.getElementById("searchResults");
-
-        // Create a FormData object to send the form data to the server
-        var formData = new FormData();
-        formData.append("query", input.value);
-
-        // Send an asynchronous request to the server to fetch search results
-        fetch("/search", {
-            method: "POST",
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Clear the previous search results
-            resultsContainer.innerHTML = "";
-
-            // Loop through the received data and create list items
-            data.forEach(user => {
-                var listItem = document.createElement("li");
-                listItem.textContent = user[1] + " " + user[2] + " " + user[3] + " " + user[4] + " ";
-
-                 // Create an image element
-                var image = document.createElement("img");
-                image.src = user[8]; // Assuming user[8] contains the path to the image
-                image.alt = "User Image";
-                image.classList.add("rounded-square-lobby");
-                listItem.appendChild(image);
-
-                listItem.addEventListener("click", function() {
-                input.value = user[1] + " " + user[2];
-                resultsContainer.innerHTML = "";
-
-                // Add the selected user ID to the hidden input field
-                var selectedUsersInput = document.getElementById("selectedUsersInput");
-                var selectedUserId = String(user[0]);
-
-                if (selectedUsersInput.value === "") {
-                  selectedUsersInput.value = selectedUserId;
-                } else {
-                  var selectedUserIds = selectedUsersInput.value.split(",");
-                  if (!selectedUserIds.includes(selectedUserId)) {
-                    selectedUsersInput.value += "," + selectedUserId;
-                    // Add the selected username to the selected users list
-                    var selectedUsersList = document.getElementById("selectedUsers");
-                    var newRow = selectedUsersTable.insertRow();
-                    var imgCell = newRow.insertCell();
-                    var nameCell = newRow.insertCell();
-                    var surnameCell = newRow.insertCell();
-                    var stateCell = newRow.insertCell();
-                    var cityCell = newRow.insertCell();
-                    var skillCell = newRow.insertCell();
-                    var fairplayCell = newRow.insertCell();
-                    var friendlinessCell = newRow.insertCell();
-                    imgCell.appendChild(image);
-                    nameCell.textContent = user[1];
-                    surnameCell.textContent = user[2];
-                    stateCell.textContent = user[3];
-                    cityCell.textContent = user[4];
-                    skillCell.textContent = user[5];
-                    fairplayCell.textContent = user[6];
-                    friendlinessCell.textContent = user[7];
-                    // Show the container if it was previously hidden
-                    if (selectedUsersContainer.style.display === "none") {
-                      selectedUsersContainer.style.display = "block";
-                    }
-                  }
-                  else {
-                    alert( user[1] + " " + user[2] + " is already added!");
-                  }
-                }
-
-                input.value = "";
-                });
-
-                resultsContainer.appendChild(listItem);
-            });
-
-        })
-
-        .catch(error => {
-            console.error("Error fetching search results:", error);
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: latitude, lng: longitude },
+          zoom: 10,
         });
+
+        const searchBox = new google.maps.places.SearchBox(document.getElementById("location-search"));
+
+        searchBox.addListener("places_changed", () => {
+          const places = searchBox.getPlaces();
+
+          if (places.length === 0) {
+            return;
+          }
+
+          map.setCenter(places[0].geometry.location);
+          map.setZoom(15);
+        });
+
+        // Create a marker variable to store the user-selected location
+        var marker;
+
+        // Add a click event listener to the map
+        google.maps.event.addListener(map, "click", function(event) {
+          // Check if a marker already exists
+          if (marker) {
+            // If a marker exists, remove it from the map
+            marker.setMap(null);
+          }
+
+          // Create a new marker at the clicked location
+          marker = new google.maps.Marker({
+            position: event.latLng,
+            map: map
+          });
+
+          // Store the selected location's latitude and longitude
+          var latitude = event.latLng.lat();
+          var longitude = event.latLng.lng();
+
+          // Use the latitude and longitude as desired (e.g., store in a form field, send to the server)
+          console.log("Latitude: " + latitude);
+          console.log("Longitude: " + longitude);
+
+          // Store the latitude and longitude in hidden input fields
+          document.getElementById("latitude").value = latitude;
+          document.getElementById("longitude").value = longitude;
+        });
+      },
+      function(error) {
+        console.error("Error getting user's location:", error);
+      }
+    );
+  } else {
+    console.error("Geolocation is not supported by this browser.");
+  }
 }
 
-// Add blur event listener to the search input
-input.addEventListener("blur", function () {
-  // Check if the blur event is triggered by clicking outside the search input and results container
-  setTimeout(function () {
-    if (!input.contains(document.activeElement) && !resultsContainer.contains(document.activeElement)) {
-      resultsContainer.innerHTML = "";
-    }
-  }, 100);
-});
-
-// Add click event listener to the document to handle clicks outside the search input and results container
-document.addEventListener("click", function (event) {
-  if (!input.contains(event.target) && !resultsContainer.contains(event.target)) {
-    resultsContainer.innerHTML = "";
-    input.value = "";
-  }
-});
+// Call the initMap function when the page has finished loading
+google.maps.event.addDomListener(window, "load", initMap);
 
 </script>
-
+<style>
+  #group_name, #location-search {
+      width: 200px; /* Adjust this value to the desired width */
+      background-color: #a4afcf;
+      height: 20px;
+  }
+</style>
 
 {% endblock %}

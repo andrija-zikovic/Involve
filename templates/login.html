@@ -6,39 +6,35 @@
 
 {% block main %}
 
-      <form id="login-form" action="/login" method="post">
+  <form id="login-form" action="/login" method="post">
 
-          <div class="container">
-            <label for="username"><b>Username</b></label>
-            <input type="text" placeholder="Enter Username" name="username" required>
-
-            <label for="psw"><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" name="psw" required>
-
-            <button type="submit" style="background-image: linear-gradient(to bottom, #1E90FF, #007FFF);
-            border-radius: 20px;
-            padding: 10px 20px;
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;">Login</button>
-            <label>
-              <input type="checkbox" checked="checked" name="remember"> Remember me
-            </label>
-          </div>
-
-          <div class="container" style="background-color:#f1f1f1">
-            <span class="psw">Forgot <a href="#">password?</a></span>
-          </div>
-        </form>
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-          <div class="container">
-              {% for message in messages %}
-          <div class="alert alert-danger">{{ message }}</div>
-              {% endfor %}
-          </div>
-          {% endif %}
-        {% endwith %}
-
+      <div class="container">
+        <label for="username"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="username" required id="username-input">
+      </div>
+      <div class="container">
+        <label for="psw"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" name="psw" required id="password-input">
+      </div>
+        <button type="submit" class="btn btn-primary" style="font-weight: bold; margin-right: 10px; background-color: #a4afcf; color: black; border-color: #a4afcf;">Login</button>
+    </form>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="container">
+          {% for message in messages %}
+      <div class="alert alert-danger">{{ message }}</div>
+          {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    <style>
+      #password-input, #username-input {
+        width: 200px; /* Adjust this value to the desired width */
+        background-color: #a4afcf;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px; /* Adjust this value to add spacing between the label and input */
+      }
+    </style>  
 {% endblock %}

@@ -1,8 +1,5 @@
 from functools import wraps
-from flask import redirect, render_template, request, session
-import csv
-import datetime
-import os
+from flask import redirect, session
 
 def login_required(f):
     """
@@ -17,32 +14,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def create_csv(csv_filename):
-    csv_filename = os.path.join('data', csv_filename + '.csv')
-
-    # Create empty CSV file with header row
-    with open(csv_filename, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['Time', 'Text', 'User ID'])
-# create_csv("my_data")
-
-def write_to_csv(csv_filename, row_data):
-    csv_filename = os.path.join('data', csv_filename + '.csv')
-
-    # Write row data to CSV file
-    with open(csv_filename, 'a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(row_data)
-# write_to_csv("my_data", ['2023-05-05 10:30:00', 'Hello, world!', '123'])
-
-def delete_csv(csv_filename):
-    csv_filename = os.path.join('data', csv_filename + '.csv')  # Add .csv extension
-    if os.path.exists(csv_filename):
-        os.remove(csv_filename)
-    else:
-        print(f"The file {csv_filename} does not exist.")
-# delete_csv("my_data")
-
 def user_name(user_id, db):
     user_data = db.execute("SELECT name, surname FROM users_info WHERE id = ?", user_id)
     if user_data:
@@ -50,3 +21,25 @@ def user_name(user_id, db):
         return(name)
     else:
         return "User data not found."
+    
+def new_msg_check(group_id, db, count):
+    count1 = db.execute("SELECT COUNT(message) AS count FROM messages WHERE group_id = ?", group_id)
+    msg_count = count1[0]['count']
+    msg_count1 = int(count)
+    print(msg_count, msg_count1)
+    if msg_count > msg_count1:
+        msg_count1 = msg_count
+        return True
+    else:
+        return False
+    
+def vote_check(group_id, db):
+    vote_status1 = db.execute("SELECT vote FROM groups WHERE group_id = ?", group_id)
+    vote_status = vote_status1[0]['vote']
+
+    if vote_status is 0:
+        return False
+    elif vote_status is 1:
+        return True
+    else:
+        return(KeyError)
